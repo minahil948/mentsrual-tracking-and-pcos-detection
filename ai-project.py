@@ -148,3 +148,45 @@ print(
 )
 
 df_pcos.head(4)
+
+#cheking for missing vals in other cols
+print("Dataset A: Missing Values")
+
+missing_a = df_cycle.isnull().sum()
+
+print(missing_a[missing_a > 0].to_string())
+
+total_missing_a = df_cycle.isnull().sum().sum()
+total_values_a = df_cycle.size
+
+#calculating total for set A
+print(
+    "Total missing:",
+    total_missing_a,
+    "out of",
+    total_values_a,
+    "(",
+    (total_missing_a / total_values_a) * 100,
+    "% )"
+)
+
+#for B
+print("\nDataset B: Missing Values")
+
+missing_b = df_pcos.isnull().sum()
+
+print(missing_b[missing_b > 0].to_string())
+
+total_missing_b = df_pcos.isnull().sum().sum()
+total_values_b = df_pcos.size
+
+#total for B
+print(
+    "Total missing:",
+    total_missing_b,
+    "out of",
+    total_values_b,
+    "(",
+    (total_missing_b / total_values_b) * 100,
+    "% )"
+)
