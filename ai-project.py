@@ -302,3 +302,50 @@ df_pcos = winsorize(
 
 print("Outliers capped in both datasets ")
 
+#fxing datatypes
+binary_cols_pcos = [
+    'PCOS (Y/N)', 'Weight gain(Y/N)', 'hair growth(Y/N)',
+    'Skin darkening (Y/N)', 'Hair loss(Y/N)',
+    'Pimples(Y/N)', 'Fast food (Y/N)', 'Reg.Exercise(Y/N)'
+]
+
+# Convert PCOS binary columns to clean integers 
+for col in binary_cols_pcos:
+    df_pcos[col] = df_pcos[col].fillna(0).astype(int)
+
+# Ensure target variable is integer
+df_cycle['is_irregular'] = df_cycle['is_irregular'].astype(int)
+
+print("Dataset A — Key Data Types")
+print(
+    df_cycle[['cycle_length', 'days_to_next_period', 'bmi', 'is_irregular']]
+    .dtypes
+    .to_string()
+)
+
+print("\nDataset B — Key Data Types")
+print(
+    df_pcos[['BMI', 'AMH(ng/mL)', 'LH(mIU/mL)', 'PCOS (Y/N)']]
+    .dtypes
+    .to_string()
+)
+
+print("\nAll types verified ")
+
+#descriptions
+print(
+    f"Dataset A shape: {df_cycle.shape} "
+    f"({df_cycle.shape[0]} cycle records, {df_cycle.shape[1]} features)"
+)
+
+print(
+    f"Dataset B shape: {df_pcos.shape} "
+    f"({df_pcos.shape[0]} patients, {df_pcos.shape[1]} features)"
+)
+
+
+print("\nDataset A: Descriptive Statistics")
+display(df_cycle.describe().round(2))
+
+print("Dataset B: Descriptive Statistics")
+display(df_pcos.describe().round(2))
