@@ -270,4 +270,35 @@ for col in cols_b:
 
     print(col, ":", outliers, "outliers")
 
-print("\nStrategy: Winsorizing (clipping values within IQR bounds)")
+print("\nStrategy: Winsorizing clipping values within IQR bounds)")
+
+#winsorize the outliers
+def winsorize(df, cols):
+    for col in cols:
+        Q1 = df[col].quantile(0.25)
+        Q3 = df[col].quantile(0.75)
+
+        IQR = Q3 - Q1
+
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+
+        df[col] = df[col].clip(lower_bound, upper_bound)
+
+    return df
+
+
+# Apply to Dataset A
+df_cycle = winsorize(
+    df_cycle,
+    ['cycle_length', 'days_to_next_period', 'bmi', 'period_length']
+)
+
+# Apply to Dataset B
+df_pcos = winsorize(
+    df_pcos,
+    ['BMI', 'FSH(mIU/mL)', 'LH(mIU/mL)', 'AMH(ng/mL)', 'Cycle length(days)']
+)
+
+print("Outliers capped in both datasets ")
+
