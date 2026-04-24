@@ -1,14 +1,12 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 
 plt.rcParams['figure.figsize'] = (11, 5)
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
-sns.set_palette('Set2')
 print("Libraries imported successfully")
 
 raw = pd.read_csv('FedCycleData071012 (2).csv')
@@ -345,7 +343,31 @@ print(
 
 
 print("\nDataset A: Descriptive Statistics")
-display(df_cycle.describe().round(2))
+#display(df_cycle.describe().round(2))
 
 print("Dataset B: Descriptive Statistics")
-display(df_pcos.describe().round(2))
+#display(df_pcos.describe().round(2))
+
+
+#plotting histogram
+fig, axes = plt.subplots(2, 3, figsize=(16, 9))
+fig.suptitle('Distribution of Numerical Features — Dataset A', fontweight='bold', fontsize=14)
+
+num_cols = ['cycle_length', 'prev_cycle_length', 'mean_cycle_length',
+            'std_cycle_length', 'bmi', 'period_length']
+colors = ['steelblue', 'teal', 'darkcyan', 'slateblue', 'coral', 'goldenrod']
+
+for ax, col, color in zip(axes.flat, num_cols, colors):
+    ax.hist(df_cycle[col], bins=28, color=color, edgecolor='white', alpha=0.85)
+    ax.set_title(col, fontsize=11)
+    ax.set_xlabel('Value')
+    ax.set_ylabel('Frequency')
+
+
+plt.tight_layout()
+plt.show()
+print("Observation: cycle_length and days_to_next_period are approximately normal.")
+print("std_cycle_length is right-skewed (some patients have very irregular histories).")
+print("BMI shows a slight right skew common in health datasets.")
+
+
