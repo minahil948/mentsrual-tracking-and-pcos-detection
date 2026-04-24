@@ -190,3 +190,26 @@ print(
     (total_missing_b / total_values_b) * 100,
     "% )"
 )
+
+#fill missing values using median in set A
+num_cols_a = df_cycle.select_dtypes(include='number').columns
+
+for col in num_cols_a:
+    if df_cycle[col].isnull().sum() > 0:
+        median_value = df_cycle[col].median()
+        df_cycle[col].fillna(median_value, inplace=True)
+
+#fill missing values using median in set A
+num_cols_b = df_pcos.select_dtypes(include='number').columns
+
+for col in num_cols_b:
+    if df_pcos[col].isnull().sum() > 0:
+        median_value = df_pcos[col].median()
+        df_pcos[col].fillna(median_value, inplace=True)
+
+#double chk if there are any other missing vals 
+
+print("Dataset A remaining missing:", df_cycle.isnull().sum().sum())
+print("Dataset B remaining missing:", df_pcos.isnull().sum().sum())
+print("\nAll missing values have been filled using median.")
+
