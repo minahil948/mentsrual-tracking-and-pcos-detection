@@ -213,3 +213,61 @@ print("Dataset A remaining missing:", df_cycle.isnull().sum().sum())
 print("Dataset B remaining missing:", df_pcos.isnull().sum().sum())
 print("\nAll missing values have been filled using median.")
 
+
+#settng up box plots
+
+fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+fig.suptitle('Boxplots for Outlier Detection — Dataset A', fontweight='bold')
+
+cols_a = ['cycle_length', 'bmi', 'period_length']
+
+for ax, col in zip(axes, cols_a):
+    ax.boxplot(
+        df_cycle[col].dropna(),
+        patch_artist=True,
+        boxprops=dict(facecolor='#4C9BE8', alpha=0.7),
+        medianprops=dict(color='black', linewidth=2)
+    )
+    ax.set_title(col)
+    ax.set_ylabel('Value')
+
+plt.tight_layout()
+plt.show()
+
+# Outlier count 
+print("Outlier Count for Dataset A")
+
+cols_a_out = ['cycle_length', 'days_to_next_period', 'bmi']
+
+for col in cols_a_out:
+    Q1 = df_cycle[col].quantile(0.25)
+    Q3 = df_cycle[col].quantile(0.75)
+    IQR = Q3 - Q1
+
+    lower = Q1 - 1.5 * IQR
+    upper = Q3 + 1.5 * IQR
+
+# if less than lower bund or greater than upper bound then outliers
+    outliers = ((df_cycle[col] < lower) | (df_cycle[col] > upper)).sum()
+
+    print(col, ":", outliers, "outliers")
+
+#outliers for set B
+print("\n=== Outlier Count (IQR method) — Dataset B ===")
+
+cols_b = ['BMI', 'FSH(mIU/mL)', 'LH(mIU/mL)', 'AMH(ng/mL)', 'Cycle length(days)']
+
+for col in cols_b:
+    Q1 = df_pcos[col].quantile(0.25)
+    Q3 = df_pcos[col].quantile(0.75)
+    IQR = Q3 - Q1
+
+    lower = Q1 - 1.5 * IQR
+    upper = Q3 + 1.5 * IQR
+#same as set A
+
+    outliers = ((df_pcos[col] < lower) | (df_pcos[col] > upper)).sum()
+
+    print(col, ":", outliers, "outliers")
+
+print("\nStrategy: Winsorizing (clipping values within IQR bounds)")
