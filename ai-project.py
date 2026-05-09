@@ -6,7 +6,8 @@ from matplotlib.patches import Patch
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error, r2_score
+from xgboost import XGBRegressor
+from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
 
 
 plt.rcParams['figure.figsize'] = (11, 5)
@@ -361,294 +362,294 @@ print("Dataset B: Descriptive Statistics")
 print(df_pcos.describe().round(2).to_string())
 
 
-# Histograms 
+# # Histograms 
 
-fig, axes = plt.subplots(2, 3, figsize=(16, 9))
-fig.suptitle(
-    'Distribution of Numerical Features — Dataset A',
-    fontweight='bold',
-    fontsize=14
-)
+# fig, axes = plt.subplots(2, 3, figsize=(16, 9))
+# fig.suptitle(
+#     'Distribution of Numerical Features — Dataset A',
+#     fontweight='bold',
+#     fontsize=14
+# )
 
-num_cols = [
-    'cycle_length',
-    'prev_cycle_length',
-    'mean_cycle_length',
-    'std_cycle_length',
-    'bmi',
-    'period_length'
-]
+# num_cols = [
+#     'cycle_length',
+#     'prev_cycle_length',
+#     'mean_cycle_length',
+#     'std_cycle_length',
+#     'bmi',
+#     'period_length'
+# ]
 
-colors = ['steelblue', 'teal', 'darkcyan', 'slateblue', 'coral', 'goldenrod']
+# colors = ['steelblue', 'teal', 'darkcyan', 'slateblue', 'coral', 'goldenrod']
 
-for ax, col, color in zip(axes.flat, num_cols, colors):
-    ax.hist(df_cycle[col], bins=28, color=color, edgecolor='white', alpha=0.85)
-    ax.set_title(col, fontsize=11)
-    ax.set_xlabel('Value')
-    ax.set_ylabel('Frequency')
+# for ax, col, color in zip(axes.flat, num_cols, colors):
+#     ax.hist(df_cycle[col], bins=28, color=color, edgecolor='white', alpha=0.85)
+#     ax.set_title(col, fontsize=11)
+#     ax.set_xlabel('Value')
+#     ax.set_ylabel('Frequency')
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
 
-print("Observation: cycle_length and days_to_next_period are approximately normally distributed.")
-print("std_cycle_length is right-skewed — some patients have highly variable cycle histories.")
-print("BMI shows a slight right skew, common in health datasets.")
+# print("Observation: cycle_length and days_to_next_period are approximately normally distributed.")
+# print("std_cycle_length is right-skewed — some patients have highly variable cycle histories.")
+# print("BMI shows a slight right skew, common in health datasets.")
 
 
-# Cycle Irregularity
+# # Cycle Irregularity
 
-fig, axes = plt.subplots(1, 3, figsize=(16, 5))
-fig.suptitle('Cycle Length Analysis', fontweight='bold')
+# fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+# fig.suptitle('Cycle Length Analysis', fontweight='bold')
 
 
-# Histogram with irregular boundary lines
-axes[0].hist(
-    df_cycle['cycle_length'],
-    bins=30,
-    color='steelblue',
-    edgecolor='white'
-)
+# # Histogram with irregular boundary lines
+# axes[0].hist(
+#     df_cycle['cycle_length'],
+#     bins=30,
+#     color='steelblue',
+#     edgecolor='white'
+# )
 
-axes[0].axvline(21, linestyle='--', color='tomato', label='Below 21 (Irregular)')
-axes[0].axvline(35, linestyle='--', color='orange', label='Above 35 (Irregular)')
-axes[0].set_title('Cycle Length Distribution')
-axes[0].set_xlabel('Cycle Length (days)')
-axes[0].set_ylabel('Frequency')
-axes[0].legend()
+# axes[0].axvline(21, linestyle='--', color='tomato', label='Below 21 (Irregular)')
+# axes[0].axvline(35, linestyle='--', color='orange', label='Above 35 (Irregular)')
+# axes[0].set_title('Cycle Length Distribution')
+# axes[0].set_xlabel('Cycle Length (days)')
+# axes[0].set_ylabel('Frequency')
+# axes[0].legend()
 
 
-# Boxplot comparing regular vs irregular
-regular_cycles   = df_cycle[df_cycle['is_irregular'] == 0]['cycle_length']
-irregular_cycles = df_cycle[df_cycle['is_irregular'] == 1]['cycle_length']
+# # Boxplot comparing regular vs irregular
+# regular_cycles   = df_cycle[df_cycle['is_irregular'] == 0]['cycle_length']
+# irregular_cycles = df_cycle[df_cycle['is_irregular'] == 1]['cycle_length']
 
-axes[1].boxplot(
-    [regular_cycles, irregular_cycles],
-    labels=['Regular', 'Irregular']
-)
-axes[1].set_title('Regular vs Irregular Cycles')
-axes[1].set_ylabel('Cycle Length (days)')
+# axes[1].boxplot(
+#     [regular_cycles, irregular_cycles],
+#     labels=['Regular', 'Irregular']
+# )
+# axes[1].set_title('Regular vs Irregular Cycles')
+# axes[1].set_ylabel('Cycle Length (days)')
 
 
-# Pie chart
-counts = df_cycle['is_irregular'].value_counts().sort_index()
+# # Pie chart
+# counts = df_cycle['is_irregular'].value_counts().sort_index()
 
-axes[2].pie(
-    counts,
-    labels=['Regular', 'Irregular'],
-    autopct='%1.1f%%',
-    startangle=90
-)
-axes[2].set_title('Irregularity Rate')
+# axes[2].pie(
+#     counts,
+#     labels=['Regular', 'Irregular'],
+#     autopct='%1.1f%%',
+#     startangle=90
+# )
+# axes[2].set_title('Irregularity Rate')
 
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
 
-regular_pct = (df_cycle['is_irregular'] == 0).mean() * 100
+# regular_pct = (df_cycle['is_irregular'] == 0).mean() * 100
 
-print("Regular cycles  :", (df_cycle['is_irregular'] == 0).sum(), f"({regular_pct:.1f}%)")
-print("Irregular cycles:", (df_cycle['is_irregular'] == 1).sum(), f"({100 - regular_pct:.1f}%)")
+# print("Regular cycles  :", (df_cycle['is_irregular'] == 0).sum(), f"({regular_pct:.1f}%)")
+# print("Irregular cycles:", (df_cycle['is_irregular'] == 1).sum(), f"({100 - regular_pct:.1f}%)")
 
 
 
-symptom_cols = [
-    'Weight gain(Y/N)',
-    'hair growth(Y/N)',
-    'Skin darkening (Y/N)',
-    'Hair loss(Y/N)',
-    'Pimples(Y/N)'
-]
+# symptom_cols = [
+#     'Weight gain(Y/N)',
+#     'hair growth(Y/N)',
+#     'Skin darkening (Y/N)',
+#     'Hair loss(Y/N)',
+#     'Pimples(Y/N)'
+# ]
 
-fig, axes = plt.subplots(1, 5, figsize=(18, 5))
-fig.suptitle('Symptom Prevalence in PCOS vs Non-PCOS Patients', fontweight='bold')
+# fig, axes = plt.subplots(1, 5, figsize=(18, 5))
+# fig.suptitle('Symptom Prevalence in PCOS vs Non-PCOS Patients', fontweight='bold')
 
-for ax, col in zip(axes, symptom_cols):
+# for ax, col in zip(axes, symptom_cols):
 
-    pcos_yes = df_pcos[df_pcos['PCOS (Y/N)'] == 1][col].mean() * 100
-    pcos_no  = df_pcos[df_pcos['PCOS (Y/N)'] == 0][col].mean() * 100
+#     pcos_yes = df_pcos[df_pcos['PCOS (Y/N)'] == 1][col].mean() * 100
+#     pcos_no  = df_pcos[df_pcos['PCOS (Y/N)'] == 0][col].mean() * 100
 
-    ax.bar(
-        ['Non-PCOS', 'PCOS'],
-        [pcos_no, pcos_yes],
-        color=['steelblue', 'coral']
-    )
+#     ax.bar(
+#         ['Non-PCOS', 'PCOS'],
+#         [pcos_no, pcos_yes],
+#         color=['steelblue', 'coral']
+#     )
 
-    ax.set_title(col.replace('(Y/N)', '').strip())
-    ax.set_ylabel('% of patients')
-    ax.set_ylim(0, 100)
+#     ax.set_title(col.replace('(Y/N)', '').strip())
+#     ax.set_ylabel('% of patients')
+#     ax.set_ylim(0, 100)
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
 
-print("Key insight: PCOS patients show higher symptom prevalence across all categories.")
-print("Hair growth and weight gain show the strongest differences between groups.")
+# print("Key insight: PCOS patients show higher symptom prevalence across all categories.")
+# print("Hair growth and weight gain show the strongest differences between groups.")
 
 
-# PCOS Class Distribution
+# # PCOS Class Distribution
 
-fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-fig.suptitle('PCOS Dataset Analysis', fontweight='bold')
+# fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+# fig.suptitle('PCOS Dataset Analysis', fontweight='bold')
 
 
-# Pie chart 
-pcos_counts = df_pcos['PCOS (Y/N)'].value_counts().sort_index()
+# # Pie chart 
+# pcos_counts = df_pcos['PCOS (Y/N)'].value_counts().sort_index()
 
-axes[0].pie(
-    pcos_counts,
-    labels=['No PCOS', 'PCOS'],
-    autopct='%1.1f%%',
-    colors=['steelblue', 'coral'],
-    startangle=90,
-    wedgeprops={'edgecolor': 'white'}
-)
-axes[0].set_title('PCOS Class Distribution')
+# axes[0].pie(
+#     pcos_counts,
+#     labels=['No PCOS', 'PCOS'],
+#     autopct='%1.1f%%',
+#     colors=['steelblue', 'coral'],
+#     startangle=90,
+#     wedgeprops={'edgecolor': 'white'}
+# )
+# axes[0].set_title('PCOS Class Distribution')
 
 
-# cycle length by PCOS status
-no_pcos  = df_pcos[df_pcos['PCOS (Y/N)'] == 0]['Cycle length(days)']
-yes_pcos = df_pcos[df_pcos['PCOS (Y/N)'] == 1]['Cycle length(days)']
+# # cycle length by PCOS status
+# no_pcos  = df_pcos[df_pcos['PCOS (Y/N)'] == 0]['Cycle length(days)']
+# yes_pcos = df_pcos[df_pcos['PCOS (Y/N)'] == 1]['Cycle length(days)']
 
-axes[1].hist(no_pcos,  bins=20, alpha=0.7, label='No PCOS', color='steelblue')
-axes[1].hist(yes_pcos, bins=20, alpha=0.7, label='PCOS',    color='coral')
+# axes[1].hist(no_pcos,  bins=20, alpha=0.7, label='No PCOS', color='steelblue')
+# axes[1].hist(yes_pcos, bins=20, alpha=0.7, label='PCOS',    color='coral')
 
-axes[1].set_title('Cycle Length Distribution by PCOS Status')
-axes[1].set_xlabel('Cycle Length (days)')
-axes[1].set_ylabel('Count')
-axes[1].legend()
+# axes[1].set_title('Cycle Length Distribution by PCOS Status')
+# axes[1].set_xlabel('Cycle Length (days)')
+# axes[1].set_ylabel('Count')
+# axes[1].legend()
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
 
 
-# Scatter Plots
+# # Scatter Plots
 
-fig, axes = plt.subplots(1, 3, figsize=(17, 5))
-fig.suptitle('Feature Relationships Analysis', fontweight='bold')
+# fig, axes = plt.subplots(1, 3, figsize=(17, 5))
+# fig.suptitle('Feature Relationships Analysis', fontweight='bold')
 
 
-# Previous cycle length vs days to next period
-axes[0].scatter(
-    df_cycle['prev_cycle_length'],
-    df_cycle['days_to_next_period'],
-    alpha=0.3,
-    s=12,
-    color='steelblue'
-)
+# # Previous cycle length vs days to next period
+# axes[0].scatter(
+#     df_cycle['prev_cycle_length'],
+#     df_cycle['days_to_next_period'],
+#     alpha=0.3,
+#     s=12,
+#     color='steelblue'
+# )
 
-axes[0].set_title('Previous Cycle vs Next Period (Dataset A)')
-axes[0].set_xlabel('Previous Cycle Length (days)')
-axes[0].set_ylabel('Days to Next Period')
+# axes[0].set_title('Previous Cycle vs Next Period (Dataset A)')
+# axes[0].set_xlabel('Previous Cycle Length (days)')
+# axes[0].set_ylabel('Days to Next Period')
 
 
-# BMI vs Cycle Length coloured by irregularity
-colors_irregular = df_cycle['is_irregular'].map({0: 'steelblue', 1: 'coral'})
+# # BMI vs Cycle Length coloured by irregularity
+# colors_irregular = df_cycle['is_irregular'].map({0: 'steelblue', 1: 'coral'})
 
-axes[1].scatter(
-    df_cycle['bmi'],
-    df_cycle['cycle_length'],
-    c=colors_irregular,
-    alpha=0.3,
-    s=12
-)
+# axes[1].scatter(
+#     df_cycle['bmi'],
+#     df_cycle['cycle_length'],
+#     c=colors_irregular,
+#     alpha=0.3,
+#     s=12
+# )
 
-axes[1].set_title('BMI vs Cycle Length')
-axes[1].set_xlabel('BMI')
-axes[1].set_ylabel('Cycle Length (days)')
+# axes[1].set_title('BMI vs Cycle Length')
+# axes[1].set_xlabel('BMI')
+# axes[1].set_ylabel('Cycle Length (days)')
 
-axes[1].legend(
-    handles=[
-        Patch(color='steelblue', label='Regular'),
-        Patch(color='coral',     label='Irregular')
-    ]
-)
+# axes[1].legend(
+#     handles=[
+#         Patch(color='steelblue', label='Regular'),
+#         Patch(color='coral',     label='Irregular')
+#     ]
+# )
 
 
-# LH vs AMH coloured by PCOS status
-colors_pcos = df_pcos['PCOS (Y/N)'].map({0: 'steelblue', 1: 'coral'})
+# # LH vs AMH coloured by PCOS status
+# colors_pcos = df_pcos['PCOS (Y/N)'].map({0: 'steelblue', 1: 'coral'})
 
-axes[2].scatter(
-    df_pcos['LH(mIU/mL)'],
-    df_pcos['AMH(ng/mL)'],
-    c=colors_pcos,
-    alpha=0.5,
-    s=15
-)
+# axes[2].scatter(
+#     df_pcos['LH(mIU/mL)'],
+#     df_pcos['AMH(ng/mL)'],
+#     c=colors_pcos,
+#     alpha=0.5,
+#     s=15
+# )
 
-axes[2].set_title('LH vs AMH (PCOS Analysis)')
-axes[2].set_xlabel('LH (mIU/mL)')
-axes[2].set_ylabel('AMH (ng/mL)')
+# axes[2].set_title('LH vs AMH (PCOS Analysis)')
+# axes[2].set_xlabel('LH (mIU/mL)')
+# axes[2].set_ylabel('AMH (ng/mL)')
 
-axes[2].legend(
-    handles=[
-        Patch(color='steelblue', label='No PCOS'),
-        Patch(color='coral',     label='PCOS')
-    ]
-)
+# axes[2].legend(
+#     handles=[
+#         Patch(color='steelblue', label='No PCOS'),
+#         Patch(color='coral',     label='PCOS')
+#     ]
+# )
 
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
 
-print("Insight 1: Previous cycle length has a strong positive relationship with next cycle length.")
-print("Insight 2: BMI shows mild separation between regular and irregular cycles.")
-print("Insight 3: LH and AMH show clear clustering by PCOS status.")
+# print("Insight 1: Previous cycle length has a strong positive relationship with next cycle length.")
+# print("Insight 2: BMI shows mild separation between regular and irregular cycles.")
+# print("Insight 3: LH and AMH show clear clustering by PCOS status.")
 
 
-#pair plot
-pair_cols_a = [
-    'cycle_length',
-    'prev_cycle_length',
-    'mean_cycle_length',
-    'bmi',
-    'days_to_next_period',
-    'is_irregular'
-]
+# #pair plot
+# pair_cols_a = [
+#     'cycle_length',
+#     'prev_cycle_length',
+#     'mean_cycle_length',
+#     'bmi',
+#     'days_to_next_period',
+#     'is_irregular'
+# ]
 
-sample_df = df_cycle[pair_cols_a].sample(400, random_state=42)
+# sample_df = df_cycle[pair_cols_a].sample(400, random_state=42)
 
-g = sns.pairplot(
-    sample_df,
-    hue='is_irregular',
-    palette={0: 'steelblue', 1: 'coral'},
-    plot_kws={'alpha': 0.4, 's': 15},
-    diag_kind='kde'
-)
+# g = sns.pairplot(
+#     sample_df,
+#     hue='is_irregular',
+#     palette={0: 'steelblue', 1: 'coral'},
+#     plot_kws={'alpha': 0.4, 's': 15},
+#     diag_kind='kde'
+# )
 
-g.figure.suptitle(
-    'Pairwise Feature Relationships — Dataset A',
-    y=1.02,
-    fontweight='bold'
-)
+# g.figure.suptitle(
+#     'Pairwise Feature Relationships — Dataset A',
+#     y=1.02,
+#     fontweight='bold'
+# )
 
-plt.show()
+# plt.show()
 
 
-pair_cols_b = [
-    'BMI',
-    'AMH(ng/mL)',
-    'LH(mIU/mL)',
-    'FSH(mIU/mL)',
-    'Cycle length(days)',
-    'PCOS (Y/N)'
-]
+# pair_cols_b = [
+#     'BMI',
+#     'AMH(ng/mL)',
+#     'LH(mIU/mL)',
+#     'FSH(mIU/mL)',
+#     'Cycle length(days)',
+#     'PCOS (Y/N)'
+# ]
 
-g2 = sns.pairplot(
-    df_pcos[pair_cols_b],
-    hue='PCOS (Y/N)',
-    palette={0: 'steelblue', 1: 'coral'},
-    plot_kws={'alpha': 0.4, 's': 15},
-    diag_kind='kde'
-)
+# g2 = sns.pairplot(
+#     df_pcos[pair_cols_b],
+#     hue='PCOS (Y/N)',
+#     palette={0: 'steelblue', 1: 'coral'},
+#     plot_kws={'alpha': 0.4, 's': 15},
+#     diag_kind='kde'
+# )
 
-g2.figure.suptitle(
-    'Pairwise Feature Relationships — PCOS Dataset',
-    y=1.02,
-    fontweight='bold'
-)
+# g2.figure.suptitle(
+#     'Pairwise Feature Relationships — PCOS Dataset',
+#     y=1.02,
+#     fontweight='bold'
+# )
 
-plt.show()
+# plt.show()
 
-print("Insight: AMH and LH show the strongest separation between PCOS and non-PCOS patients.")
+# print("Insight: AMH and LH show the strongest separation between PCOS and non-PCOS patients.")
 
 
 #methadologgy
@@ -711,68 +712,6 @@ print(f"  On average, predictions differ by about {mae:.1f} days from the actual
 print(f"  The model explains approximately {r2 * 100:.0f}% of the variance in cycle length.")
 
 
- #Actual vs Predicted
-
-fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-
-fig.suptitle(
-    'Model 1 — Random Forest Regressor Performance',
-    fontsize=13,
-    fontweight='bold'
-)
-
-
-# Plot 1: Actual vs Predicted scatter
-axes[0].scatter(
-    y_test_a,
-    y_pred_a,
-    alpha=0.4,
-    s=18,
-    color='steelblue'
-)
-
-lims = [y_test_a.min(), y_test_a.max()]
-
-axes[0].plot(
-    lims,
-    lims,
-    linestyle='--',
-    linewidth=1.5,
-    color='red',
-    label='Perfect prediction'
-)
-
-axes[0].set_xlabel('Actual Days to Next Period')
-axes[0].set_ylabel('Predicted Days')
-axes[0].set_title(f'Actual vs Predicted  (MAE={mae:.2f}, R²={r2:.3f})')
-axes[0].legend()
-
-
-# Residual distribution
-residuals = y_test_a - y_pred_a
-
-axes[1].hist(
-    residuals,
-    bins=35,
-    color='slateblue',
-    edgecolor='white',
-    alpha=0.85
-)
-
-axes[1].axvline(
-    0,
-    linestyle='--',
-    linewidth=1.5,
-    color='tomato'
-)
-
-axes[1].set_xlabel('Residual (Actual − Predicted)')
-axes[1].set_ylabel('Frequency')
-axes[1].set_title('Residual Distribution')
-
-
-plt.tight_layout()
-plt.show()
 
 
 
@@ -787,26 +726,6 @@ importance_df = importance_df.sort_values(
     by='Importance',
     ascending=True
 )
-
-plt.figure(figsize=(9, 5))
-
-plt.barh(
-    importance_df['Feature'],
-    importance_df['Importance'],
-    color='steelblue',
-    alpha=0.85
-)
-
-plt.xlabel('Feature Importance (Mean Decrease in Impurity)')
-plt.title(
-    'Model 1 — Feature Importances\n'
-    '(Features used to predict next period date)',
-    fontsize=12,
-    fontweight='bold'
-)
-
-plt.tight_layout()
-plt.show()
 
 print("Key Insight:")
 print("  prev_cycle_length and mean_cycle_length are the strongest predictors.")
@@ -840,3 +759,188 @@ print()
 print("Note:")
 print("Patients flagged as irregular (predicted cycle < 21 or > 35 days)")
 print("would proceed to Model 2 (Random Forest Classifier) for PCOS risk assessment.")
+
+# XGBoost model
+xgb_reg = XGBRegressor(
+    n_estimators=200,
+    max_depth=6,
+    learning_rate=0.05,
+    subsample=0.8,
+    colsample_bytree=0.8,
+    min_child_weight=5,
+    random_state=42,
+    verbosity=0
+)
+
+xgb_reg.fit(X_train_a, y_train_a)
+y_pred_xgb = xgb_reg.predict(X_test_a)
+
+
+# metrics
+mae_rf  = mean_absolute_error(y_test_a, y_pred_a)
+rmse_rf = np.sqrt(mean_squared_error(y_test_a, y_pred_a))
+r2_rf   = r2_score(y_test_a, y_pred_a)
+
+mae_xgb  = mean_absolute_error(y_test_a, y_pred_xgb)
+rmse_xgb = np.sqrt(mean_squared_error(y_test_a, y_pred_xgb))
+r2_xgb   = r2_score(y_test_a, y_pred_xgb)
+
+
+print("\nModel Comparison")
+print("-" * 50)
+print(f"{'Metric':<15} {'RF':>10} {'XGB':>10}")
+print("-" * 50)
+print(f"{'MAE':<15} {mae_rf:>10.2f} {mae_xgb:>10.2f}")
+print(f"{'RMSE':<15} {rmse_rf:>10.2f} {rmse_xgb:>10.2f}")
+print(f"{'R²':<15} {r2_rf:>10.4f} {r2_xgb:>10.4f}")
+
+# winner 
+winner_r2   = "XGBoost" if r2_xgb > r2_rf else "Random Forest"
+winner_mae  = "XGBoost" if mae_xgb < mae_rf else "Random Forest"
+winner_rmse = "XGBoost" if rmse_xgb < rmse_rf else "Random Forest"
+
+print("\nPerformance Summary")
+print(f"Better R²   : {winner_r2}")
+print(f"Better MAE  : {winner_mae}")
+print(f"Better RMSE : {winner_rmse}")
+
+if winner_r2 == winner_mae == winner_rmse:
+    print(f"\n{winner_r2} performs better overall.")
+else:
+    print("\nBoth models perform well depending on the metric.")
+    print(f"{winner_mae} gives more accurate day-level predictions.")
+
+
+# plots
+fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+fig.suptitle('Random Forest vs XGBoost', fontsize=14, fontweight='bold')
+
+models = [
+    ('Random Forest', y_pred_a, 'steelblue'),
+    ('XGBoost', y_pred_xgb, 'darkorange')
+]
+
+
+for ax, (name, preds, color) in zip(axes[0], models):
+
+    ax.scatter(y_test_a, preds, alpha=0.4, s=15, color=color)
+
+    lims = [y_test_a.min(), y_test_a.max()]
+    ax.plot(lims, lims, 'r--', linewidth=1.5)
+
+    mae_val = mean_absolute_error(y_test_a, preds)
+    r2_val  = r2_score(y_test_a, preds)
+
+    ax.set_title(f'{name} (MAE={mae_val:.2f}, R²={r2_val:.3f})')
+    ax.set_xlabel('Actual Days')
+    ax.set_ylabel('Predicted Days')
+
+
+for ax, (name, preds, color) in zip(axes[1], models):
+
+    residuals = y_test_a - preds
+
+    ax.hist(
+        residuals,
+        bins=35,
+        color=color,
+        edgecolor='white',
+        alpha=0.85
+    )
+
+    ax.axvline(0, linestyle='--', color='red', linewidth=1.5)
+
+    ax.set_title(f'{name} Residuals')
+    ax.set_xlabel('Actual - Predicted')
+    ax.set_ylabel('Frequency')
+
+
+plt.tight_layout(rect=[0, 0, 1, 0.96], h_pad=3)
+plt.show()
+
+
+# feature importance
+fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+
+rf_imp = pd.DataFrame({
+    'Feature': feature_cols_a,
+    'Importance': rf_reg.feature_importances_
+}).sort_values('Importance', ascending=True)
+
+axes[0].barh(
+    rf_imp['Feature'],
+    rf_imp['Importance'],
+    color='steelblue',
+    alpha=0.85
+)
+
+axes[0].set_title('Random Forest')
+axes[0].set_xlabel('Importance')
+
+
+xgb_imp = pd.DataFrame({
+    'Feature': feature_cols_a,
+    'Importance': xgb_reg.feature_importances_
+}).sort_values('Importance', ascending=True)
+
+axes[1].barh(
+    xgb_imp['Feature'],
+    xgb_imp['Importance'],
+    color='darkorange',
+    alpha=0.85
+)
+
+axes[1].set_title('XGBoost')
+axes[1].set_xlabel('Importance')
+
+plt.tight_layout()
+plt.show()
+
+
+# metric comparison
+fig, axes = plt.subplots(1, 3, figsize=(13, 5))
+
+metrics  = ['MAE', 'RMSE', 'R²']
+rf_vals  = [mae_rf, rmse_rf, r2_rf]
+xgb_vals = [mae_xgb, rmse_xgb, r2_xgb]
+
+
+for ax, metric, rf_val, xgb_val in zip(axes, metrics, rf_vals, xgb_vals):
+
+    bars = ax.bar(
+        ['RF', 'XGB'],
+        [rf_val, xgb_val],
+        color=['steelblue', 'darkorange'],
+        alpha=0.85,
+        width=0.5
+    )
+
+    ax.set_title(metric)
+
+    for bar, val in zip(bars, [rf_val, xgb_val]):
+
+        ax.text(
+            bar.get_x() + bar.get_width()/2,
+            bar.get_height(),
+            f'{val:.3f}',
+            ha='center',
+            va='bottom',
+            fontsize=9
+        )
+
+    if metric == 'R²':
+        best = 0 if rf_val > xgb_val else 1
+    else:
+        best = 0 if rf_val < xgb_val else 1
+
+    bars[best].set_edgecolor('green')
+    bars[best].set_linewidth(2)
+
+
+plt.tight_layout()
+plt.show()
+
+
+print("\nFinal Results")
+print(f"RF  -> MAE: {mae_rf:.2f} | RMSE: {rmse_rf:.2f} | R²: {r2_rf:.4f}")
+print(f"XGB -> MAE: {mae_xgb:.2f} | RMSE: {rmse_xgb:.2f} | R²: {r2_xgb:.4f}")
